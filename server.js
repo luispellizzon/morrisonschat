@@ -13,6 +13,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // Run when client connects
 io.on("connection", (socket) => {
   console.log("New sk cnt");
+
+  socket.emit("message", "Welcome to MorrisonsChat!");
 });
 
 const PORT = 3000 || process.env.PORT;
