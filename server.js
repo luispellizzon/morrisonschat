@@ -3,6 +3,12 @@ const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
 const format = require("./utils/messages");
+const {
+  userJoin,
+  getCurrentUser,
+  userLeave,
+  getRoomUsers,
+} = require("./utils/users");
 
 const app = express();
 const server = http.createServer(app);
@@ -15,23 +21,42 @@ const botName = "MorrisonsChat Bot";
 
 // Run when client connects
 io.on("connection", (socket) => {
-  // Welcome current user
-  socket.emit(
-    "message",
-    format(botName, "Welcome to Morrisons Island Campus Chat!")
-  );
+  // Catch user and room
+  socket.on("joinRoom", ({ username, room }) => {
+    const user = userJoin(socket.id, username, room);
 
-  // When user connects, display on chat
-  socket.broadcast.emit("message", format(botName, "A user joined the chat!"));
+    socket.join(user.room);
+    // Welcome current user
+    socket.emit(
+      "message",
+      format(botName, "Welcome to Morrisons Island Campus Chat!")
+    );
 
-  // When user disconnects, display on chat
-  socket.on("disconnect", () => {
-    io.emit("message", format(botName, "A user left the chat"));
+    // When user connects, display on chat
+    socket.broadcast
+      .to(user.room)
+      .emit("message", format(botName, `${username} joined the chat!`));
   });
 
   // Listen for message submit on chat
   socket.on("chatMessage", (message) => {
-    io.emit("message", format("USER", message));
+    const currentUser = getCurrentUser(socket.id);
+    io.to(currentUser.room).emit(
+      "message",
+      format(currentUser.username, message)
+    );
+  });
+
+  // When user disconnects, display on chat
+  socket.on("disconnect", () => {
+    const user = userLeave(socket.id);
+
+    if (user) {
+      io.to(user.room).emit(
+        "message",
+        format(botName, `${user.username} has left the chat.`)
+      );
+    }
   });
 });
 
