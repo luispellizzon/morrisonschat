@@ -14,7 +14,16 @@ app.use(express.static(path.join(__dirname, "public")));
 io.on("connection", (socket) => {
   console.log("New sk cnt");
 
+  // Welcome current user
   socket.emit("message", "Welcome to MorrisonsChat!");
+
+  // When user connects, display on chat
+  socket.broadcast.emit("message", "A user joined the chat!");
+
+  // When user disconnects, display on chat
+  socket.on("disconnect", () => {
+    io.emit("message", "User left the chat");
+  });
 });
 
 const PORT = 3000 || process.env.PORT;
