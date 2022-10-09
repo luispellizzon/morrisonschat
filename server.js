@@ -12,8 +12,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Run when client connects
 io.on("connection", (socket) => {
-  console.log("New sk cnt");
-
   // Welcome current user
   socket.emit("message", "Welcome to MorrisonsChat!");
 
@@ -23,6 +21,11 @@ io.on("connection", (socket) => {
   // When user disconnects, display on chat
   socket.on("disconnect", () => {
     io.emit("message", "User left the chat");
+  });
+
+  // Listen for message submit on chat
+  socket.on("chatMessage", (message) => {
+    io.emit("message", message);
   });
 });
 
